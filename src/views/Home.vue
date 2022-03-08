@@ -27,7 +27,7 @@
       <div class="row justify-content-center">
         <div class="col-lg-8">
           <div v-if="dataUpdate" class="dataSince">
-            時間從 {{ dataFrom }} 截至 {{ dataTo }}
+            統計期間從 {{ dataFrom }} 截至 {{ dataTo }}
           </div>
           <Chart v-if="weaChartData" :weaChartData="weaChartData" :options="options"/>
         </div>
@@ -58,7 +58,7 @@ export default {
       currentStatics: '',
       dataFrom: '',
       dataTo: '',
-      nameChinese: ['氣壓', '氣溫', '相對濕度', '雲量覆蓋', '日照時數', '累積降雨量', '風速'],
+      nameChinese: ['氣壓', '氣溫', '相對濕度', '雲量', '日照時數', '降水量', '風速'],
       dataUpdate: false,
       weaChartData: {
         labels: [
