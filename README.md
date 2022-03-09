@@ -2,7 +2,7 @@
 
 ### 串接中央氣象局Api將每月平均地面觀測站的數據資料使用vue-chart呈現出來!
 
-### demo https://jacky6450.github.io/Meteorology-Monthly-Average-Observation/
+### demo: https://jacky6450.github.io/Meteorology-Monthly-Average-Observation/
 
 ### 資料項目
 * 氣壓
