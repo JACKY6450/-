@@ -21,15 +21,48 @@
             {{ item.Name }}
           </option>
         </select>
-        <button class="btn btn-primary" @click="updateData()">資料更新</button>
+        <button class="btn btn-primary px-4" @click="updateData()">查詢</button>
       </div>
       
       <div class="row justify-content-center">
+        <div v-if="dataUpdate" class="col-lg-8" style="overflow-x: scroll;">
+          <table class="table text-center text-nowrap">
+              <thead>
+                <tr class="table-primary">
+                  <th>一月</th>
+                  <th>二月</th>
+                  <th>三月</th>
+                  <th>四月</th>
+                  <th>五月</th>
+                  <th>六月</th>
+                  <th>七月</th>
+                  <th>八月</th>
+                  <th>九月</th>
+                  <th>十月</th>
+                  <th>十一月</th>
+                  <th>十二月</th>
+                  <th>統計期間</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr 
+                  :class="(index+1) % 2 === 1 ? 'table-secondary' : 'table-info'" 
+                  v-for="(item, index) in tableStatistic" :key="index"
+                >
+                  <td 
+                    v-for="(item, index1) in tableStatistic[index]" 
+                    :key="index1">
+                    {{ item }}
+                  </td>
+                  <td>
+                    {{ dataFrom }} ~ {{ dataTo }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
         <div class="col-lg-8">
-          <div v-if="dataUpdate" class="dataSince">
-            統計期間從 {{ dataFrom }} 截至 {{ dataTo }}
-          </div>
-          <Chart v-if="weaChartData" :weaChartData="weaChartData" :options="options"/>
+          <Chart id="chart" v-if="weaChartData" :weaChartData="weaChartData" :options="options"/>
         </div>
       </div>
     </div>
@@ -54,6 +87,7 @@ export default {
       data: {},
       station: [],
       statisticsType: [],
+      tableStatistic:[],
       currentStation: '',
       currentStatics: '',
       dataFrom: '',
@@ -79,7 +113,7 @@ export default {
       },
       options: {
         responsive: true,
-        maintainAspectRation: true,
+        maintainAspectRation: false,
         tilte: {
           display: true,
           text: 'My Data',
@@ -114,9 +148,10 @@ export default {
               if(key == 'temperature'){
                 console.log(key);
                 let weaChartData = {...this.weaChartData};
-                weaChartData.datasets.splice(0, weaChartData.datasets.length);
+                let tableStatistic = [];
                 this.dataFrom = statistics[key].startYear;
                 this.dataTo = statistics[key].endYear;
+                weaChartData.datasets.splice(0, weaChartData.datasets.length);
                 for(let i=0; i<3; i++){
                   let datasetsData = [];
                   statistics[key].monthly.forEach((item1) => {
@@ -132,6 +167,7 @@ export default {
                       datasetsData.push(item1.minimum);
                     }
                   })
+                  tableStatistic.push([...datasetsData]);
                   weaChartData.datasets.push({
                     label: i===0 ? 'mean' : i===1 ? 'maximum' : i===2 ? 'minimum' : '',
                     data: [...datasetsData],
@@ -141,12 +177,14 @@ export default {
                     pointBackgroundColor: i===0 ? '#00ffff' : i===1 ? '#ff3333' : i===2 ? '#00aa55' : ''
                   })
                   // console.log('123', weaChartData.datasets);
-                  this.weaChartData = {...weaChartData};  
+                  this.tableStatistic = [...tableStatistic];
+                  this.weaChartData = {...weaChartData}; 
                 }
               }
               else {
-                 this.dataFrom = statistics[key].startYear;
+                this.dataFrom = statistics[key].startYear;
                 this.dataTo = statistics[key].endYear;
+                let tableStatistic = [];
                 let datasetsData = [];
                 statistics[key].monthly.forEach((item1) => {
                   if(key === 'sunshineDuration'){
@@ -159,7 +197,8 @@ export default {
                   else{
                     datasetsData.push(item1.mean);
                   }
-                })  
+                })
+                tableStatistic.push([...datasetsData]);  
                 let weaChartData = {...this.weaChartData};
                 weaChartData.datasets.splice(0, weaChartData.datasets.length);
                 weaChartData.datasets.push({
@@ -171,6 +210,7 @@ export default {
                   pointBackgroundColor: key === 'sunshineDuration' ? '	#eeee00' : key === 'precipitation' ? '#0000ff' : '#00ffff'
                 })
                 // console.log('123', weaChartData.datasets);
+                this.tableStatistic = [...tableStatistic];
                 this.weaChartData = {...weaChartData};
               }
             }
@@ -202,7 +242,7 @@ export default {
       this.statisticsType = [...statisticsType];
       this.data = data;
     })
-  }
+  },
 }
 </script>
 <style scoped>
