@@ -1,6 +1,5 @@
 <template>
   <div class="home">
-    <!-- <HelloWorld msg="Welcome to Your Vue.js App"/> -->
     <div class="container mt-4">
       <div class="edit d-flex justify-content-center mb-3">
         <select class="p-1 mr-2" v-model="currentStation">
@@ -15,53 +14,55 @@
         <select class="p-1 mr-2" v-model="currentStatics">
           <option value="">---選擇要呈現的數據---</option>
           <option 
-            v-for="item in statisticsType" :key="item.Name"
+            v-for="item in statisticsType" :key="item.name"
             :value="item.value"
           >
-            {{ item.Name }}
+            {{ item.name }}
           </option>
         </select>
         <button class="btn btn-primary px-4" @click="updateData()">查詢</button>
       </div>
       
       <div class="row justify-content-center">
-        <div v-if="dataUpdate" class="col-lg-8" style="overflow-x: scroll;">
+        <div v-if="dataUpdate" class="col-lg-10" style="overflow-x: scroll;">
           <table class="table text-center text-nowrap">
-              <thead>
-                <tr class="table-primary">
-                  <th>一月</th>
-                  <th>二月</th>
-                  <th>三月</th>
-                  <th>四月</th>
-                  <th>五月</th>
-                  <th>六月</th>
-                  <th>七月</th>
-                  <th>八月</th>
-                  <th>九月</th>
-                  <th>十月</th>
-                  <th>十一月</th>
-                  <th>十二月</th>
-                  <th>統計期間</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr 
-                  :class="(index+1) % 2 === 1 ? 'table-secondary' : 'table-info'" 
-                  v-for="(item, index) in tableStatistic" :key="index"
-                >
-                  <td 
-                    v-for="(item, index1) in tableStatistic[index]" 
-                    :key="index1">
-                    {{ item }}
-                  </td>
-                  <td>
-                    {{ dataFrom }} ~ {{ dataTo }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <thead>
+              <tr class="table-primary">
+                <th>一月</th>
+                <th>二月</th>
+                <th>三月</th>
+                <th>四月</th>
+                <th>五月</th>
+                <th>六月</th>
+                <th>七月</th>
+                <th>八月</th>
+                <th>九月</th>
+                <th>十月</th>
+                <th>十一月</th>
+                <th>十二月</th>
+                <th>單位</th>
+                <th>對應曲線</th>
+                <th>統計期間</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr 
+                :class="(index+1) % 2 === 1 ? 'table-secondary' : 'table-info'" 
+                v-for="(item, index) in tableStatistic" :key="index"
+              >
+                <td 
+                  v-for="(item, index1) in tableStatistic[index]" 
+                  :key="index1">
+                  {{ item }}
+                </td>
+                <td>
+                  {{ dataFrom }} ~ {{ dataTo }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="col-lg-8">
+        <div class="col-lg-8 mt-3">
           <Chart id="chart" v-if="weaChartData" :weaChartData="weaChartData" :options="options"/>
         </div>
       </div>
@@ -92,7 +93,15 @@ export default {
       currentStatics: '',
       dataFrom: '',
       dataTo: '',
-      nameChinese: ['氣壓', '氣溫', '相對濕度', '雲量', '日照時數', '降水量', '風速'],
+      nameChinese: [
+        {name: '氣壓', unit: '百帕'},
+        {name: '氣溫', unit: '度C'},
+        {name: '相對濕度', unit: '%'},
+        {name: '雲量', unit: '十分量'},
+        {name: '日照時數', unit: '小時'},
+        {name: '降水量', unit: '毫米'},
+        {name: '風速', unit: '公尺/秒'}
+      ],
       dataUpdate: false,
       weaChartData: {
         labels: [
@@ -144,8 +153,7 @@ export default {
           let statistics = item.stationObsStatistics;
           Object.keys(statistics).forEach((key) => {
             if(key === this.currentStatics){
-              console.log(item.station.stationName, key, statistics[key]); 
-              if(key == 'temperature'){
+              if(key === 'temperature'){
                 console.log(key);
                 let weaChartData = {...this.weaChartData};
                 let tableStatistic = [];
@@ -165,6 +173,11 @@ export default {
                     else
                     if(i===2){
                       datasetsData.push(item1.minimum);
+                    }
+                  })
+                  this.statisticsType.forEach((item1) => {
+                    if(item1.value === this.currentStatics){
+                      datasetsData.push(item1.unit);
                     }
                   })
                   tableStatistic.push([...datasetsData]);
@@ -198,6 +211,11 @@ export default {
                     datasetsData.push(item1.mean);
                   }
                 })
+                this.statisticsType.forEach((item1) => {
+                  if(item1.value === this.currentStatics){
+                    datasetsData.push(item1.unit);
+                  }
+                })
                 tableStatistic.push([...datasetsData]);  
                 let weaChartData = {...this.weaChartData};
                 weaChartData.datasets.splice(0, weaChartData.datasets.length);
@@ -217,6 +235,30 @@ export default {
           })
         }
       })
+      this.curveMark();
+    },
+    curveMark(){
+      let tableStatistic = [...this.tableStatistic];
+      if(this.currentStatics === 'temperature'){
+        const curveState = ['mean', 'maximum', 'minimum'];
+        tableStatistic.forEach((item, index) => {
+          tableStatistic[index].push(curveState[index]);
+        })
+      }
+      else{
+        if(this.currentStatics === 'sunshineDuration'){
+          tableStatistic[0].push('total');
+        }
+        else 
+        if(this.currentStatics === 'precipitation'){
+          tableStatistic[0].push('accumulation');
+        }
+        else{
+          tableStatistic[0].push('mean');
+        }
+      }
+      // console.log('table', tableStatistic);
+      this.tableStatistic = tableStatistic;
     }
   },
   created(){
@@ -235,7 +277,7 @@ export default {
       statisticsName.forEach((item, index) => {
         statisticsType.push({
           value: item,
-          Name: this.nameChinese[index]
+          ...this.nameChinese[index],
         })
       })
       console.log('sta', statisticsType);
@@ -246,8 +288,4 @@ export default {
 }
 </script>
 <style scoped>
-  .chartContain{
-    max-width: 700px;
-    margin: 30px auto;
-  }
 </style>
